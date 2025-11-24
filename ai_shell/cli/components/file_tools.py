@@ -26,3 +26,21 @@ class FileTools:
             )
         except Exception as e:
             return ToolResult(success=False, output="", error=f"Error reading file: {e}")
+
+    @staticmethod
+    def write_file(session: Session, path: str, content: str) -> ToolResult:
+        try:
+            file_path = os.path.abspath(os.path.join(session.cwd, path))
+
+            # Security check: ensure the path is within the sandbox
+            common_path = os.path.commonpath([session.sandbox_root, file_path])
+            if common_path != session.sandbox_root:
+                return ToolResult(success=False, output="", error=f"Error: Attempt to write outside of sandbox to '{path}'.")
+
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            return ToolResult(success=True, output=f"Successfully wrote to {path}")
+
+        except Exception as e:
+            return ToolResult(success=False, output="", error=f"Error writing to file: {e}")

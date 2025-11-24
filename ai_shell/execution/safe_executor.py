@@ -71,6 +71,7 @@ def run_safe_command(
             text=True,
             shell=True,
             executable=os.environ.get("SHELL", "/bin/sh"),
+            check=False,
         )
         stdout = result.stdout or ""
         stderr = result.stderr or ""

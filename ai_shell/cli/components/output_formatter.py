@@ -84,3 +84,14 @@ class OutputFormatter:
             padding=(1, 2),
         )
         console.print(panel)
+
+    @staticmethod
+    def print_writing_file(console: Console, path: str) -> None:
+        panel = Panel(
+            f"[cyan]{path}[/cyan]",
+            title=Text(" Writing file ", style="white on purple"),
+            border_style="purple",
+            title_align="left",
+            padding=(1, 2),
+        )
+        console.print(panel)

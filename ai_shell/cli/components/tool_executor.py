@@ -23,5 +23,12 @@ class ToolExecutor:
 
             return ToolResult(success=ok, output=stdout if ok else stderr)
 
+        elif tool_name == "write_file":
+            path = tool_args.get("path", "")
+            content = tool_args.get("content", "")
+            if not path:
+                return ToolResult(success=False, output="", error="Error: No path provided for write_file")
+            return FileTools.write_file(session, path, content)
+
         else:
             return ToolResult(success=False, output="", error=f"Error: Unknown tool '{tool_name}'")
