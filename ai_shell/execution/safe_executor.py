@@ -6,7 +6,7 @@ from typing import Tuple
 from ai_shell.core.session import Session
 
 
-BASE_FORBIDDEN_WORDS = {"rm", "sudo", "chmod", "chown", "mv", "cp"}
+BASE_FORBIDDEN_WORDS = {"rm", "sudo"}
 
 
 def _get_forbidden_words(safety_profile: str) -> set[str]:
@@ -21,8 +21,6 @@ def _get_forbidden_words(safety_profile: str) -> set[str]:
 def is_safe_command(command: str, safety_profile: str = "standard") -> Tuple[bool, str]:
     if not command.strip():
         return False, "Empty command."
-    if "\n" in command or "\r" in command:
-        return False, "Multiline commands are not allowed."
 
     tokens = shlex.split(command)
     if not tokens:

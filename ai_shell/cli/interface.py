@@ -2,8 +2,6 @@ import os
 import platform
 
 from rich.console import Console
-from rich.text import Text
-from rich.align import Align
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style

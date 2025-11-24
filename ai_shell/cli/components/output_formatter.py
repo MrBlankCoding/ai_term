@@ -62,3 +62,25 @@ class OutputFormatter:
             padding=(1, 2),
         )
         console.print(panel)
+
+    @staticmethod
+    def print_command(console: Console, command: str) -> None:
+        panel = Panel(
+            f"[bold cyan]$ {command}[/bold cyan]",
+            title=Text(" Command ", style="white on blue"),
+            border_style="blue",
+            title_align="left",
+            padding=(1, 2),
+        )
+        console.print(panel)
+
+    @staticmethod
+    def print_reading_file(console: Console, path: str) -> None:
+        panel = Panel(
+            f"[cyan]{path}[/cyan]",
+            title=Text(" Reading file ", style="white on magenta"),
+            border_style="magenta",
+            title_align="left",
+            padding=(1, 2),
+        )
+        console.print(panel)

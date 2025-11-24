@@ -51,6 +51,13 @@ class CommandProcessor:
         self.conversation.add_assistant_message(assistant_content)
 
         if suggestion.tool_call:
+            if suggestion.command:
+                tool_name = suggestion.tool_call.get("tool")
+                if tool_name == "shell_command":
+                    OutputFormatter.print_command(self.console, suggestion.command)
+                elif tool_name == "read_file":
+                    OutputFormatter.print_reading_file(self.console, suggestion.command)
+
             result = ToolExecutor.execute(self.session, suggestion.tool_call, self.settings.safety_profile)
 
             output = result.output if result.success else result.error
