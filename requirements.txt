@@ -1,3 +1,4 @@
 rich
 requests
 prompt-toolkit
+pytest

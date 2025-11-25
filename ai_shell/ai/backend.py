@@ -46,10 +46,19 @@ class CommandCleaner:
         if "\n" not in cmd and "#" in cmd:
             try:
                 parts = shlex.split(cmd)
-                cmd = " ".join(parts)
+                clean_parts = []
+                for part in parts:
+                    if part == "#":
+                        break
+                    # Handle case where comment is attached to a word, e.g., "ls#comment"
+                    if "#" in part and not part.startswith("'") and not part.startswith('"'):
+                        clean_parts.append(part.split("#", 1)[0].rstrip())
+                        break
+                    clean_parts.append(part)
+                cmd = " ".join(clean_parts).strip()
             except ValueError:
+                # shlex fails on unmatched quotes, so fallback to simpler logic
                 pass
-
         return cmd
 
     @staticmethod

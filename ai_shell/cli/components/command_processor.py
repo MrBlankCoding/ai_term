@@ -8,9 +8,9 @@ from rich.console import Console
 from rich.live import Live
 
 from ai_shell.ai.backend import AIBackend, AISuggestion
+from ai_shell.cli.components.command_recognizer import CommandRecognizer
 from ai_shell.core.session import Session
 from ai_shell.core.settings import Settings
-from ai_shell.execution.safe_executor import run_safe_command
 from ai_shell.cli.components.conversation_manager import ConversationManager
 from ai_shell.cli.components.output_formatter import OutputFormatter
 from ai_shell.cli.components.tool_executor import ToolExecutor
@@ -36,7 +36,7 @@ class ToolExecutionResult:
 
 class CommandProcessor:
     MAX_TOOL_CALLS_PER_QUERY = 5
-    MAX_ERROR_RECOVERY_DEPTH = 2  # Prevent infinite error recovery loops
+    MAX_ERROR_RECOVERY_DEPTH = 5  # Prevent infinite error recovery loops
 
     def __init__(
         self,
@@ -44,11 +44,13 @@ class CommandProcessor:
         session: Session,
         settings: Settings,
         conversation: ConversationManager,
+        recognizer: 'CommandRecognizer',
     ):
         self.console = console
         self.session = session
         self.settings = settings
         self.conversation = conversation
+        self.recognizer = recognizer
 
         self._state = ProcessingState.IDLE
         self._tool_calls_remaining = self.MAX_TOOL_CALLS_PER_QUERY
@@ -67,29 +69,30 @@ class CommandProcessor:
         tool_name = tool_call.get("tool", "unknown")
 
         if not silent and suggestion.command:
-            if tool_name == "shell_command":
-                OutputFormatter.print_command(self.console, suggestion.command)
-            elif tool_name == "read_file":
-                OutputFormatter.print_reading_file(self.console, suggestion.command)
-            elif tool_name == "write_file":
-                args = tool_call.get("args", {})
-                content = args.get("content", "")
-                size = len(content.encode("utf-8")) if content else None
-                OutputFormatter.print_writing_file(
-                    self.console, suggestion.command, size
-                )
+            # if tool_name == "shell_command":
+            #     OutputFormatter.print_command(self.console, suggestion.command)
+            # elif tool_name == "read_file":
+            #     OutputFormatter.print_reading_file(self.console, suggestion.command)
+            # elif tool_name == "write_file":
+            #     args = tool_call.get("args", {})
+            #     content = args.get("content", "")
+            #     size = len(content.encode("utf-8")) if content else None
+            #     OutputFormatter.print_writing_file(
+            #         self.console, suggestion.command, size
+            #     )
+            pass
 
         start_time = time.time()
 
         with self.console.status(f"Executing {tool_name}..."):
             result = ToolExecutor.execute(
-                self.session, tool_call, self.settings.safety_profile
+                self.session, tool_call, self.settings.safety_profile, recognizer=self.recognizer, console=self.console
             )
 
         execution_time = time.time() - start_time
         output = result.output if result.success else result.error
         
-        if not silent:
+        if not silent and tool_name != "shell_command":
             OutputFormatter.print_output(
                 self.console, output, result.success, execution_time
             )
@@ -103,7 +106,7 @@ class CommandProcessor:
         )
 
     def _add_suggestion_to_history(
-        self, suggestion: AISuggestion, include_tool: bool = True
+        self, suggestion: AISuggestion
     ) -> None:
             assistant_content = suggestion.explanation
             self.conversation.add_assistant_message(assistant_content)
@@ -288,6 +291,9 @@ class CommandProcessor:
             log.add(f"✗ {final_explanation}")
 
         log.complete()
+
+        # Clear the 'Thinking...' log from the screen
+        self.console.clear()
 
         if final_explanation:
             OutputFormatter.print_explanation(self.console, final_explanation)
