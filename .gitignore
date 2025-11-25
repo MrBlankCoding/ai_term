@@ -1,6 +1,7 @@
 settings.json
 command_log.jsonl
 ai_shell.egg-info
+get_weather.sh
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python

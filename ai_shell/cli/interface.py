@@ -25,78 +25,74 @@ class SAMInterface:
         self.hostname = platform.node()
         history_file = os.path.join(os.path.expanduser("~"), ".ai_shell_history")
         prompt_history = FileHistory(history_file)
-        
-        custom_style = Style.from_dict({
-            '': '#ffffff',
-            'prompt': 'ansibrightblue bold',
-            'hostname': 'fg:white bg:ansiblue',
-            'cursor': '#ffffff',
-        })
-        
-        self.prompt_session = PromptSession(
-            history=prompt_history,
-            style=custom_style
+
+        custom_style = Style.from_dict(
+            {
+                "": "#ffffff",
+                "prompt": "ansibrightblue bold",
+                "hostname": "fg:white bg:ansiblue",
+                "cursor": "#ffffff",
+            }
         )
-        
+
+        self.prompt_session = PromptSession(history=prompt_history, style=custom_style)
+
         self.command_processor = CommandProcessor(
-            self.console,
-            self.session,
-            self.settings,
-            self.conversation
+            self.console, self.session, self.settings, self.conversation
         )
-    
+
     def _get_prompt_text(self) -> list:
         prompt_cwd = self.session.get_display_cwd()
         return [
-            ('class:hostname', f" {self.hostname} "),
-            ('class:prompt', f":{prompt_cwd}> "),
+            ("class:hostname", f" {self.hostname} "),
+            ("class:prompt", f":{prompt_cwd}> "),
         ]
-    
+
     def _handle_builtin_command(self, text: str) -> bool:
         lower_text = text.lower()
-        
+
         if lower_text in ("clear", "/clear"):
             self.conversation.clear()
             self.console.clear()
             self.console.print("[bold green]✓ Conversation cleared.[/bold green]")
             return True
-        
+
         if lower_text in ("exit", "quit", "/exit", "/quit"):
             self.console.print("[bold green]Goodbye![/bold green]")
             return True
-        
+
         if text.startswith("/settings"):
-            args = text[len("/settings"):].strip()
+            args = text[len("/settings") :].strip()
             SettingsHandler.handle_command(self.console, self.settings, args)
             return True
-        
+
         if text.startswith("!"):
             command = text[1:].strip()
             if command:
                 self.command_processor.process_direct_command(command)
             self.console.print("\n")
             return True
-        
+
         return False
-    
+
     def run(self) -> None:
         OutputFormatter.print_banner(self.console)
-        
+
         while True:
             try:
                 text = self.prompt_session.prompt(self._get_prompt_text())
             except (EOFError, KeyboardInterrupt):
                 self.console.print("\n[bold green]Goodbye![/bold green]")
                 break
-            
+
             if not text.strip():
                 continue
-            
+
             if self._handle_builtin_command(text):
                 if text.lower() in ("exit", "quit", "/exit", "/quit"):
                     break
                 continue
-            
+
             self.command_processor.process_ai_query(text)
             self.console.print("\n")
 
